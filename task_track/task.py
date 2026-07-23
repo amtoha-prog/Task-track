@@ -10,3 +10,15 @@ class Task:
         self.status = status           # "Pending" / "In Progress" / "Completed"
         self.created_at = created_at
 
+    def to_dict(self):
+        """Convert the Task object into a dictionary — used when saving to the database."""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "title": self.title,
+            "course": self.course,
+            "due_date": self.due_date,
+            "priority": self.priority,
+            "status": self.status,
+            "created_at": self.created_at,
+        }
