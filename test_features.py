@@ -15,3 +15,13 @@ from features import filter_by_status
 print("\n-- Filter by status: Pending --")
 for t in filter_by_status(mock_tasks, "Pending"):
     print(t)
+
+from features import filter_by_course
+print("\n-- Filter by course: BSE 1102 --")
+for t in filter_by_course(mock_tasks, "BSE 1102"):
+    print(t)
+
+from features import filter_by_due_date
+print("\n-- Filter by due date: 2026-07-24 --")
+for t in filter_by_due_date(mock_tasks, "2026-07-24"):
+    print(t)
