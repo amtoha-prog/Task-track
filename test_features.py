@@ -25,3 +25,8 @@ from features import filter_by_due_date
 print("\n-- Filter by due date: 2026-07-24 --")
 for t in filter_by_due_date(mock_tasks, "2026-07-24"):
     print(t)
+
+from features import sort_by_due_date
+print("\n-- Sort by due date (soonest first) --")
+for t in sort_by_due_date(mock_tasks):
+    print(t)
