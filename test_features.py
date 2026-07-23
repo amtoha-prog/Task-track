@@ -30,3 +30,8 @@ from features import sort_by_due_date
 print("\n-- Sort by due date (soonest first) --")
 for t in sort_by_due_date(mock_tasks):
     print(t)
+
+from features import get_upcoming_deadlines
+print("\n-- Upcoming deadlines (excluding Completed) --")
+for t in get_upcoming_deadlines(mock_tasks):
+    print(t)
