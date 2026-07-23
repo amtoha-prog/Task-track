@@ -22,3 +22,17 @@ class Task:
             "status": self.status,
             "created_at": self.created_at,
         }
+    @classmethod
+    def from_dict(cls, data):
+        """Rebuild a Task object from a dictionary — used when reading rows back from the database."""
+        return cls(
+            id=data.get("id"),
+            user_id=data.get("user_id"),
+            title=data.get("title"),
+            course=data.get("course"),
+            due_date=data.get("due_date"),
+            priority=data.get("priority"),
+            status=data.get("status"),
+            created_at=data.get("created_at"),
+        )
+
