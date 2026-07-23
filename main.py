@@ -6,13 +6,15 @@ def get_all_users():
         {"id": 3, "name": "Simeon", "role": "admin"}
     ]
 
-# Printing the login screen
+def update_last_login(user_id):
+    # TEMPORARY — Replcae it with Tapiwanashe's real version will update the database
+    print(f"(stub) Updating last login for user {user_id}")
+
 def show_login_screen():
     users = get_all_users()
-    print("==== TASK-TRACK ====")
+    print("====TASK-TRACK====")
     for user in users:
         print(f"{user['id']}. {user['name']}")
-
 
 # Ask the user to pick which account they are by number
     try:
@@ -34,6 +36,8 @@ def show_login_screen():
 
 # Confirm to the user which account was selected
     print(f"Welcome, {selected_user['name']}!")
+
+
 
 
 
