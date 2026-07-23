@@ -10,6 +10,48 @@ def update_last_login(user_id):
     # TEMPORARY — Replcae it with Tapiwanashe's real version will update the database
     print(f"(stub) Updating last login for user {user_id}")
 
+def show_reminders():
+    # TEMPORARY — Replace it with Regan's real version will check due dates
+    print("(stub) Checking for upcoming deadlines...")
+
+def show_admin_dashboard():
+     # TEMPORARY — Replace it with Tess's real version will show user stats
+    print("(stub) Showing admin dashboard...")
+
+# Creating a main menu to show options
+def show_main_menu():
+    while True:
+        print("==== TASK-TRACK ====")
+        print("1. Add New Task/Assignment")
+        print("2. View & Filter Tasks")
+        print("3. Update Task Status")
+        print("4. Edit or Delete Task")
+        print("5. View Upcoming Deadlines")
+        print("6. Exit")
+
+        option = input("Enter your choice: ")
+
+        if option == "1":
+            # TEMPORARY — will call the real "add task" function once it's ready
+            print("(stub) Adding a new task...")
+        elif option == "2":
+            print("(stub) Viewing & filtering tasks...")
+        elif option == "3":
+            print("(stub) Updating task status...")
+        elif option == "4":
+            print("(stub) Editing or deleting a task...")
+        elif option == "5":
+            print("(stub) Viewing upcoming deadlines...")
+        elif option == "6":
+            print("Saving all data...")
+            print("Goodbye!")
+            break  # exits the while loop, ending the menu
+        else:
+            print("That's not a valid option. Please try again.")
+
+
+
+#Printing the login in screen
 def show_login_screen():
     users = get_all_users()
     print("====TASK-TRACK====")
