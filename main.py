@@ -59,7 +59,7 @@ def show_main_menu():
 # Printing the login in screen
 def show_login_screen():
     users = get_all_users()
-    print("====TASK-TRACK====")
+    print("==== TASK-TRACK ====")
     for user in users:
         print(f"{user['id']}. {user['name']}")
 
@@ -95,5 +95,6 @@ def show_login_screen():
 
 
 show_login_screen()
+
 
 
