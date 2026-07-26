@@ -2,7 +2,7 @@ from datetime import date
 from task_manager import TaskManager
 from task import Task
 from validators import is_valid_user_selection
-from features import show_reminders
+from features import get_reminder_summary
 
 tm = TaskManager()
 
@@ -19,6 +19,24 @@ def show_admin_dashboard():
         pending = len([t for t in tasks if t.status != "Completed"])
         overdue = len([t for t in tasks if t.status != "Completed" and t.due_date < today])
         print(f"{user['name']} | Last login: {user['last_login']} | Pending: {pending} | Overdue: {overdue}")
+
+
+def show_reminders(user_id):
+    # TEMPORARY local wrapper — Regan's real show_reminders() isn't in features.py yet.
+    # Uses the real get_reminder_summary() that already exists there.
+    tasks = tm.get_tasks_for_user(user_id)
+    summary = get_reminder_summary(tasks)
+    print("==== REMINDERS ====")
+    if summary["overdue"]:
+        print("Overdue:")
+        for t in summary["overdue"]:
+            print(f"  - {t.title} ({t.due_date})")
+    if summary["upcoming"]:
+        print("Upcoming:")
+        for t in summary["upcoming"]:
+            print(f"  - {t.title} ({t.due_date})")
+    if not summary["overdue"] and not summary["upcoming"]:
+        print("Nothing due soon.")
 
 
 def show_login_screen():
@@ -41,7 +59,7 @@ def show_login_screen():
         show_admin_dashboard()
     else:
         tm.update_last_login(selected["id"], str(date.today()))
-        show_reminders()
+        show_reminders(selected["id"])
         show_main_menu(selected["id"])
 
 
