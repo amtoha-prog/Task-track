@@ -52,32 +52,25 @@ def show_main_menu():
 
 
 def show_login_screen():
-    users = get_all_users()
+    raw_users = tm.get_all_users()
+    users = [{"id": u[0], "name": u[1], "role": u[2], "last_login": u[3]} for u in raw_users]
     print("==== TASK-TRACK ====")
     for user in users:
         print(f"{user['id']}. {user['name']}")
 
-    try:
-        choice = int(input("Select your user number: "))
-    except ValueError:
-        print("Please enter a valid user number.")
-        return
+    choice_str = input("Select your user number: ")
+    valid, selected = is_valid_user_selection(choice_str, users)
 
-    selected_user = None
-    for user in users:
-        if user["id"] == choice:
-            selected_user = user
-
-    if selected_user is None:
+    if not valid:
         print("That's not a valid user number. Please try again.")
         return
 
-    print(f"Welcome, {selected_user['name']}!")
+    print(f"Welcome, {selected['name']}!")
 
-    if selected_user["role"] == "admin":
+    if selected["role"] == "admin":
         show_admin_dashboard()
     else:
-        update_last_login(selected_user["id"])
+        tm.update_last_login(selected["id"], str(date.today()))
         show_reminders()
         show_main_menu()
 
