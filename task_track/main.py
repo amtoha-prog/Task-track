@@ -1,3 +1,6 @@
+from datetime import date
+
+
 def get_all_users():
     # TEMPORARY — Tapiwanashe's real version will query SQLite instead
     return [
@@ -19,11 +22,19 @@ def show_reminders():
 
 
 def show_admin_dashboard():
-    # TEMPORARY — Replace it with Tess's real version will show user stats
-    print("(stub) Showing admin dashboard...")
+    raw_users = tm.get_all_users()
+    users = [{"id": u[0], "name": u[1], "role": u[2], "last_login": u[3]} for u in raw_users]
+    today = str(date.today())
+    print("==== ADMIN DASHBOARD ====")
+    for user in users:
+        if user["role"] == "admin":
+            continue
+        tasks = tm.get_tasks_for_user(user["id"])
+        pending = len([t for t in tasks if t.status != "Completed"])
+        overdue = len([t for t in tasks if t.status != "Completed" and t.due_date < today])
+        print(f"{user['name']} | Last login: {user['last_login']} | Pending: {pending} | Overdue: {overdue}")
 
 
-# Creating a main task menu to show options
 def show_main_menu():
     while True:
         print("==== TASK-TRACK ====")
@@ -37,8 +48,6 @@ def show_main_menu():
         option = input("Enter your choice: ")
 
         if option == "1":
-            # TEMPORARY — will call the real "add task"
-            #  function once it's ready
             print("(stub) Adding a new task...")
         elif option == "2":
             print("(stub) Viewing & filtering tasks...")
@@ -51,41 +60,34 @@ def show_main_menu():
         elif option == "6":
             print("Saving all data...")
             print("Goodbye!")
-            break  # exits the while loop, ending the menu
+            break
         else:
             print("That's not a valid option. Please try again.")
 
 
-# Printing the login in screen
 def show_login_screen():
     users = get_all_users()
     print("==== TASK-TRACK ====")
     for user in users:
         print(f"{user['id']}. {user['name']}")
 
-# Ask the user to pick which account they are by number
     try:
         choice = int(input("Select your user number: "))
     except ValueError:
         print("Please enter a valid user number.")
         return
 
-    # To search the users list for the one whose id matches the choice
     selected_user = None
     for user in users:
         if user["id"] == choice:
             selected_user = user
 
-    # TEMPORARY - swap with Aliane's validators.py once it's ready
     if selected_user is None:
         print("That's not a valid user number. Please try again.")
         return
 
-# Confirm to the user which account was selected
     print(f"Welcome, {selected_user['name']}!")
 
-# Route the user based on their role: admin goes straight to their dashboard,
-# while students go through login tracking, reminders then the main task menu
     if selected_user["role"] == "admin":
         show_admin_dashboard()
     else:
@@ -95,6 +97,3 @@ def show_login_screen():
 
 
 show_login_screen()
-
-
-
