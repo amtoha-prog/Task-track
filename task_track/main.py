@@ -8,7 +8,7 @@ from validators import (
     is_valid_priority,
     normalize_priority,
 )
-from features import get_reminder_summary, get_overdue_tasks
+from features import get_reminder_summary, get_overdue_tasks, get_upcoming_deadlines
 
 tm = TaskManager()
 
@@ -23,26 +23,40 @@ def seed_users_if_needed():
         tm.add_user("Student C", "student")
         tm.add_user("Admin", "admin")
         print("First run detected — seeded 3 students + 1 admin.")
+        overdue_task = Task(title="Overdue lab report", course="BIO110",
+                             due_date="2026-07-20", priority="High",
+                             user_id=1, created_at=str(date.today()))
+        tm.add_task(overdue_task)
 
 
 def show_admin_dashboard():
-    users = tm.get_all_users()
-    print("==== ADMIN DASHBOARD ====")
-    for user in users:
-        if user["role"] == "admin":
-            continue
-        tasks = tm.get_tasks_for_user(user["id"])
-        pending = len([t for t in tasks if t.status != "Completed"])
-        overdue = len(get_overdue_tasks(tasks))
-        print(f"{user['name']} | Last login: {user['last_login']} | Pending: {pending} | Overdue: {overdue}")
-
+    while True:
+        users = tm.get_all_users()
+        print("\n" + "=" * 40)
+        print("        ADMIN DASHBOARD")
+        print("=" * 40)
+        for user in users:
+            if user["role"] == "admin":
+                continue
+            tasks = tm.get_tasks_for_user(user["id"])
+            pending = len([t for t in tasks if t.status != "Completed"])
+            overdue = len(get_overdue_tasks(tasks))
+            print(f"{user['name']} | Last login: {user['last_login']} | Pending: {pending} | Overdue: {overdue}")
+        print("=" * 40)
+        print("1. Refresh dashboard")
+        print("2. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "2":
+            print("\nSaving all data...")
+            print("Goodbye!")
+            break
 
 def show_reminders(user_id):
-    # TEMPORARY local wrapper — Regan's real show_reminders() isn't in features.py yet.
-    # Uses the real get_reminder_summary() that already exists there.
     tasks = tm.get_tasks_for_user(user_id)
     summary = get_reminder_summary(tasks)
-    print("==== REMINDERS ====")
+    print("\n" + "=" * 40)
+    print("        REMINDERS")
+    print("=" * 40)
     if summary["overdue"]:
         print("Overdue:")
         for t in summary["overdue"]:
@@ -53,22 +67,29 @@ def show_reminders(user_id):
             print(f"  - {t.title} ({t.due_date})")
     if not summary["overdue"] and not summary["upcoming"]:
         print("Nothing due soon.")
+    print("=" * 40 + "\n")
 
 
 def show_login_screen():
     users = tm.get_all_users()
-    print("==== TASK-TRACK ====")
+    print()
+    print("=" * 40)
+    print("        WELCOME TO TASK-TRACK")
+    print("   Your college task & assignment tracker")
+    print("=" * 40)
+    print("\nPlease log in to your profile:\n")
     for user in users:
-        print(f"{user['id']}. {user['name']}")
+        print(f"  {user['id']}. {user['name']}")
+    print()
 
-    choice_str = input("Select your user number: ")
+    choice_str = input("Enter the number next to your name to log in: ")
     valid, selected = is_valid_user_selection(choice_str, users)
 
     if not valid:
-        print("That's not a valid user number. Please try again.")
+        print("\nHmm, that's not a valid profile number. Please try again.\n")
         return
 
-    print(f"Welcome, {selected['name']}!")
+    print(f"\nWelcome back, {selected['name']}! Logging you in...\n")
 
     if selected["role"] == "admin":
         show_admin_dashboard()
@@ -76,29 +97,22 @@ def show_login_screen():
         tm.update_last_login(selected["id"], str(date.today()))
         show_reminders(selected["id"])
         show_main_menu(selected["id"])
-
-
-    print(f"Welcome, {selected['name']}!")
-
-    if selected["role"] == "admin":
-        show_admin_dashboard()
-    else:
-        tm.update_last_login(selected["id"], str(date.today()))
-        show_reminders(selected["id"])
-        show_main_menu(selected["id"])
-
 
 def show_main_menu(user_id):
     while True:
-        print("==== TASK-TRACK ====")
+        print("=" * 40)
+        print("           MAIN MENU")
+        print("=" * 40)
         print("1. Add New Task/Assignment")
         print("2. View & Filter Tasks")
         print("3. Update Task Status")
         print("4. Edit or Delete Task")
         print("5. View Upcoming Deadlines")
         print("6. Exit")
+        print("=" * 40)
 
         option = input("Enter your choice: ")
+        print()
 
         if option == "1":
             title = input("Enter task title: ")
@@ -181,8 +195,11 @@ def show_main_menu(user_id):
                 print("That's not a valid option. Returning to menu.")
 
         elif option == "5":
-            tasks = sorted(tm.get_tasks_for_user(user_id), key=lambda t: t.due_date)
-            for t in tasks:
+            all_tasks = tm.get_tasks_for_user(user_id)
+            upcoming = get_upcoming_deadlines(all_tasks, days_ahead=7)
+            if not upcoming:
+                print("Nothing due in the next 7 days.")
+            for t in upcoming:
                 print(f"{t.title} - {t.course} - Due: {t.due_date}")
 
         elif option == "6":
