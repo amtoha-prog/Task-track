@@ -7,6 +7,17 @@ from features import get_reminder_summary
 tm = TaskManager()
 
 
+def seed_users_if_needed():
+    # Creates the 3 student accounts + 1 admin the first time the app runs
+    # on a fresh database. Does nothing if users already exist.
+    if not tm.get_all_users():
+        tm.add_user("Student A", "student")
+        tm.add_user("Student B", "student")
+        tm.add_user("Student C", "student")
+        tm.add_user("Admin", "admin")
+        print("First run detected — seeded 3 students + 1 admin.")
+
+
 def show_admin_dashboard():
     raw_users = tm.get_all_users()
     users = [{"id": u[0], "name": u[1], "role": u[2], "last_login": u[3]} for u in raw_users]
