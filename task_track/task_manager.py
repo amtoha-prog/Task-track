@@ -93,6 +93,31 @@ class TaskManager:
         conn.close()
         return [Task.from_dict(dict(row)) for row in rows]
 
+    def get_task_by_id(self, task_id, user_id):
+        """Returns a single Task belonging to user_id, or None if it doesn't
+        exist or isn't owned by that user. Used to pre-fill the edit screen."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
+        row = cursor.fetchone()
+        conn.close()
+        return Task.from_dict(dict(row)) if row else None
+
+    def edit_task(self, task_id, user_id, title, course, due_date, priority):
+        """Updates title/course/due_date/priority for a task the user owns.
+        Status is intentionally left alone here - use update_status() for that.
+        Returns True if a row was actually changed."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE tasks SET title = ?, course = ?, due_date = ?, priority = ?
+            WHERE id = ? AND user_id = ?
+        """, (title, course, due_date, priority, task_id, user_id))
+        conn.commit()
+        updated = cursor.rowcount > 0
+        conn.close()
+        return updated
+
     def update_status(self, task_id, new_status, user_id):
         """user_id is required so a student can only update THEIR OWN tasks."""
         conn = self._get_connection()
