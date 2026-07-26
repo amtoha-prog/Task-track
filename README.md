@@ -30,7 +30,7 @@ From inside task_track/:
 
     python3 main.py
 
-The database (tasks.db) is created automatically on first run and is not tracked in git. To test locally, seed a few users first:
+The database (tasks.db) is created Automatically on first run and is not tracked in git. To test locally, seed a few users first:
 
     python3 -c "
     from task_manager import TaskManager
