@@ -18,15 +18,16 @@ TaskTrack helps students manage their academic workload in one place — adding,
 - [Why SQLite Instead of MySQL](#why-sqlite-instead-of-mysql)
 - [Team & Contributions](#team--contributions)
 - [Challenges & How We Solved Them](#challenges--how-we-solved-them)
-- [Future Improvements](#future-improvements)
 
 ---
+
 
 ## The Problem
 
 College students juggle multiple courses, deadlines, and personal responsibilities at once. When tasks aren't tracked in one place, it's easy for something to slip through the cracks — a missed assignment, a deadline nobody reminded you about.
 
 Existing tools like Canvas do send reminders, but they're passive — a student has to actively check a menu, and there's no way for an advisor to tell whether a student has actually seen or acted on that reminder. TaskTrack addresses this specific gap: **active, automatic reminders**, and an **admin view** that shows whether students are actually engaging with them.
+
 
 ## Our Solution
 
@@ -38,6 +39,7 @@ TaskTrack is a terminal-based, menu-driven Python application that gives student
 - **Persist** — a local SQLite database keeps everything saved between sessions.
 
 An admin account can also log in to see every student's last login time, pending task count, and overdue task count at a glance — giving visibility into student engagement that a standard LMS reminder system doesn't provide.
+
 
 ## Features
 
@@ -54,11 +56,13 @@ An admin account can also log in to see every student's last login time, pending
 
 All user input — dates, priorities, statuses, menu choices, and login/task selections — is validated before it reaches the database, so invalid input is caught and re-prompted rather than crashing the app.
 
+
 ## Database Design
 
 TaskTrack uses two linked SQLite tables. Every task belongs to exactly one user via a foreign key, which is what makes multi-user support and the admin dashboard possible.
 
 **`users`**
+
 
 | Column | Type | Notes |
 |---|---|---|
@@ -68,6 +72,7 @@ TaskTrack uses two linked SQLite tables. Every task belongs to exactly one user 
 | `last_login` | TEXT | Updated automatically every time this user logs in |
 
 **`tasks`**
+
 
 | Column | Type | Notes |
 |---|---|---|
@@ -81,6 +86,7 @@ TaskTrack uses two linked SQLite tables. Every task belongs to exactly one user 
 | `created_at` | TEXT | Date the task was added |
 
 Data flows one way through the app: input is collected and validated in `main.py`, written to SQLite via `task_manager.py`, and read back out — filtered, sorted, and summarized — through `features.py` before being displayed to the student or admin.
+
 
 ## Project Structure
 
@@ -97,6 +103,7 @@ task_track/
 ```
 
 `main.py` is the single entry point — running it is all that's needed to start the application.
+
 
 ## Getting Started
 
