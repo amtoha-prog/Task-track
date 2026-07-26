@@ -1,24 +1,10 @@
 from datetime import date
+from task_manager import TaskManager
+from task import Task
+from validators import is_valid_user_selection
+from features import show_reminders
 
-
-def get_all_users():
-    # TEMPORARY — Tapiwanashe's real version will query SQLite instead
-    return [
-        {"id": 1, "name": "Alissa", "role": "student"},
-        {"id": 2, "name": "TK", "role": "student"},
-        {"id": 3, "name": "Simeon", "role": "admin"}
-    ]
-
-
-def update_last_login(user_id):
-    # TEMPORARY — Replcae it with Tapiwanashe's real version
-    #  will update the database
-    print(f"(stub) Updating last login for user {user_id}")
-
-
-def show_reminders():
-    # TEMPORARY — Replace it with Regan's real version will check due dates
-    print("(stub) Checking for upcoming deadlines...")
+tm = TaskManager()
 
 
 def show_admin_dashboard():
