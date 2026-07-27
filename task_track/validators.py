@@ -16,6 +16,32 @@ def is_valid_date(date_str):
         return False
 
 
+def is_valid_time(time_str):
+    """Checks the time is valid 24-hour HH:MM format, e.g. '09:30' or '23:59'.
+    An empty string is NOT valid here — callers should check for blank input
+    separately and use a default (see combine_date_time)."""
+    if not time_str:
+        return False
+    try:
+        datetime.strptime(time_str, "%H:%M")
+        return True
+    except ValueError:
+        return False
+
+
+def combine_date_time(date_str, time_str=None, default_time="23:59"):
+    """Combines a validated date string with an optional time string into
+    the single "YYYY-MM-DD HH:MM" format stored in the database.
+    If time_str is blank/None, defaults to 23:59 (end of day) so a student
+    isn't forced to pick a time for every task.
+    Does NOT validate date_str or time_str — call is_valid_date() and
+    is_valid_time() first."""
+    time_str = (time_str or "").strip()
+    if not time_str:
+        time_str = default_time
+    return f"{date_str} {time_str}"
+
+
 def is_valid_priority(priority):
     """Checks priority is one of High / Medium / Low (case-insensitive)."""
     if not priority:
@@ -79,6 +105,15 @@ if __name__ == "__main__":
     print(is_valid_date("2026-13-40"))   # False (not a real date)
     print(is_valid_date("30/07/2026"))   # False (wrong format)
     print(is_valid_date(""))             # False
+
+    print(is_valid_time("23:59"))        # True
+    print(is_valid_time("9:5"))          # True (strptime doesn't require zero-padding)
+    print(is_valid_time("25:00"))        # False (not a real hour)
+    print(is_valid_time(""))             # False
+
+    print(combine_date_time("2026-07-31", "14:30"))  # "2026-07-31 14:30"
+    print(combine_date_time("2026-07-31", ""))        # "2026-07-31 23:59" (default)
+    print(combine_date_time("2026-07-31", None))      # "2026-07-31 23:59" (default)
 
     print(is_valid_priority("High"))     # True
     print(is_valid_priority("high"))     # True

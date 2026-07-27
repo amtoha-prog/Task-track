@@ -5,13 +5,20 @@ from validators import (
     is_valid_user_selection,
     is_valid_task_id,
     is_valid_date,
+    is_valid_time,
+    combine_date_time,
     is_valid_priority,
     normalize_priority,
 )
-from features import get_reminder_summary, get_overdue_tasks, get_upcoming_deadlines
+from features import (
+    get_reminder_summary,
+    get_overdue_tasks,
+    get_upcoming_deadlines,
+    parse_due_datetime,
+    format_time_remaining,
+)
 
 tm = TaskManager()
-
 
 
 def seed_users_if_needed():
@@ -23,10 +30,36 @@ def seed_users_if_needed():
         tm.add_user("Student C", "student")
         tm.add_user("Admin", "admin")
         print("First run detected — seeded 3 students + 1 admin.")
+
         overdue_task = Task(title="Overdue lab report", course="BIO110",
-                             due_date="2026-07-20", priority="High",
+                             due_date="2026-07-20 09:00", priority="High",
                              user_id=1, created_at=str(date.today()))
         tm.add_task(overdue_task)
+
+
+def summarize_courses(tasks, max_courses=3):
+    """Turns a list of tasks into a short course breakdown for the admin
+    dashboard, e.g. "ENG101 (2), MTH101" - so the admin can see WHICH
+    courses a student is behind in, not just a bare count.
+    Caps display to `max_courses` distinct courses, appending a
+    "+N more" suffix so the line never grows unbounded in the terminal."""
+    if not tasks:
+        return "-"
+    counts = {}
+    for t in tasks:
+        counts[t.course] = counts.get(t.course, 0) + 1
+
+    courses = list(counts.items())
+    shown, remaining = courses[:max_courses], courses[max_courses:]
+
+    parts = [f"{course} ({n})" if n > 1 else course for course, n in shown]
+    summary = ", ".join(parts)
+
+    if remaining:
+        extra_courses = len(remaining)
+        summary += f", +{extra_courses} more"
+
+    return summary
 
 
 def show_admin_dashboard():
@@ -39,17 +72,21 @@ def show_admin_dashboard():
             if user["role"] == "admin":
                 continue
             tasks = tm.get_tasks_for_user(user["id"])
-            pending = len([t for t in tasks if t.status != "Completed"])
-            overdue = len(get_overdue_tasks(tasks))
-            print(f"{user['name']} | Last login: {user['last_login']} | Pending: {pending} | Overdue: {overdue}")
+            pending_tasks = [t for t in tasks if t.status != "Completed"]
+            overdue_tasks = get_overdue_tasks(tasks)
+            print(f"{user['name']} | Last login: {user['last_login']}")
+            print(f"    Pending: {len(pending_tasks)}  [{summarize_courses(pending_tasks)}]")
+            print(f"    Overdue: {len(overdue_tasks)}  [{summarize_courses(overdue_tasks)}]")
         print("=" * 40)
         print("1. Refresh dashboard")
         print("2. Exit")
+
         choice = input("Enter your choice: ")
         if choice == "2":
             print("\nSaving all data...")
             print("Goodbye!")
             break
+
 
 def show_reminders(user_id):
     tasks = tm.get_tasks_for_user(user_id)
@@ -60,11 +97,15 @@ def show_reminders(user_id):
     if summary["overdue"]:
         print("Overdue:")
         for t in summary["overdue"]:
-            print(f"  - {t.title} ({t.due_date})")
+            due_dt = parse_due_datetime(t)
+            countdown = format_time_remaining(due_dt) if due_dt else ""
+            print(f"  - {t.title} ({t.due_date}) — {countdown}")
     if summary["upcoming"]:
         print("Upcoming:")
         for t in summary["upcoming"]:
-            print(f"  - {t.title} ({t.due_date})")
+            due_dt = parse_due_datetime(t)
+            countdown = format_time_remaining(due_dt) if due_dt else ""
+            print(f"  - {t.title} ({t.due_date}) — {countdown}")
     if not summary["overdue"] and not summary["upcoming"]:
         print("Nothing due soon.")
     print("=" * 40 + "\n")
@@ -98,6 +139,7 @@ def show_login_screen():
         show_reminders(selected["id"])
         show_main_menu(selected["id"])
 
+
 def show_main_menu(user_id):
     while True:
         print("=" * 40)
@@ -114,16 +156,20 @@ def show_main_menu(user_id):
         option = input("Enter your choice: ")
         print()
 
-        
-
         if option == "1":
             title = input("Enter task title: ")
             course = input("Enter course/category: ")
 
-            due_date = input("Enter due date (YYYY-MM-DD): ")
-            while not is_valid_date(due_date) or due_date < str(date.today()):
+            due_date_str = input("Enter due date (YYYY-MM-DD): ")
+            while not is_valid_date(due_date_str) or due_date_str < str(date.today()):
                 print("Please enter a valid date that is today or later (YYYY-MM-DD).")
-                due_date = input("Enter due date (YYYY-MM-DD): ")
+                due_date_str = input("Enter due date (YYYY-MM-DD): ")
+
+            due_time_str = input("Enter due time HH:MM, 24-hour (leave blank for 23:59): ").strip()
+            while due_time_str and not is_valid_time(due_time_str):
+                print("Please enter a valid 24-hour time (HH:MM), or leave it blank.")
+                due_time_str = input("Enter due time HH:MM, 24-hour (leave blank for 23:59): ").strip()
+            due_date = combine_date_time(due_date_str, due_time_str)
 
             priority = input("Enter priority (High/Medium/Low): ")
             while not is_valid_priority(priority):
@@ -167,13 +213,23 @@ def show_main_menu(user_id):
                 current = tm.get_task_by_id(task_id, user_id)
                 print(f"Editing '{current.title}' - press Enter to keep the current value.")
 
+                # current.due_date is stored as "YYYY-MM-DD HH:MM" - split for separate prompts
+                current_date_part, _, current_time_part = current.due_date.partition(" ")
+                current_time_part = current_time_part or "23:59"
+
                 new_title = input(f"Title [{current.title}]: ").strip() or current.title
                 new_course = input(f"Course [{current.course}]: ").strip() or current.course
 
-                new_due = input(f"Due date [{current.due_date}]: ").strip() or current.due_date
-                if not is_valid_date(new_due):
+                new_date_str = input(f"Due date [{current_date_part}]: ").strip() or current_date_part
+                if not is_valid_date(new_date_str):
                     print("That's not a valid date. Edit cancelled - nothing was changed.")
                     continue
+
+                new_time_str = input(f"Due time [{current_time_part}]: ").strip() or current_time_part
+                if not is_valid_time(new_time_str):
+                    print("That's not a valid time. Edit cancelled - nothing was changed.")
+                    continue
+                new_due = combine_date_time(new_date_str, new_time_str)
 
                 new_priority_raw = input(f"Priority [{current.priority}]: ").strip() or current.priority
                 if not is_valid_priority(new_priority_raw):
@@ -201,8 +257,11 @@ def show_main_menu(user_id):
             upcoming = get_upcoming_deadlines(all_tasks, days_ahead=7)
             if not upcoming:
                 print("Nothing due in the next 7 days.")
-            for t in upcoming:
-                print(f"{t.title} - {t.course} - Due: {t.due_date}")
+            else:
+                for t in upcoming:
+                    due_dt = parse_due_datetime(t)
+                    countdown = format_time_remaining(due_dt) if due_dt else ""
+                    print(f"{t.title} - {t.course} - Due: {t.due_date} — {countdown}")
 
         elif option == "6":
             print("Saving all data...")
@@ -214,5 +273,5 @@ def show_main_menu(user_id):
 
 
 if __name__ == "__main__":
- seed_users_if_needed()
- show_login_screen()
+    seed_users_if_needed()
+    show_login_screen()
