@@ -114,19 +114,21 @@ def show_main_menu(user_id):
         option = input("Enter your choice: ")
         print()
 
+        
+
         if option == "1":
             title = input("Enter task title: ")
             course = input("Enter course/category: ")
 
             due_date = input("Enter due date (YYYY-MM-DD): ")
-            if not is_valid_date(due_date):
-                print("That's not a valid date. Task not saved.")
-                continue
+            while not is_valid_date(due_date) or due_date < str(date.today()):
+                print("Please enter a valid date that is today or later (YYYY-MM-DD).")
+                due_date = input("Enter due date (YYYY-MM-DD): ")
 
             priority = input("Enter priority (High/Medium/Low): ")
-            if not is_valid_priority(priority):
-                print("That's not a valid priority. Task not saved.")
-                continue
+            while not is_valid_priority(priority):
+                print("That's not a valid priority. Please enter High, Medium, or Low.")
+                priority = input("Enter priority (High/Medium/Low): ")
             priority = normalize_priority(priority)
 
             t = Task(title=title, course=course, due_date=due_date,
